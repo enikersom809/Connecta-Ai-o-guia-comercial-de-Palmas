@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Heart, Store, TreePine, MapPin, Sparkles, X, User as UserIcon, LocateFixed, Star } from 'lucide-react';
+import { Search, Heart, Store, TreePine, MapPin, Sparkles, X, User as UserIcon, LocateFixed, Star, Moon, Sun } from 'lucide-react';
 import { ActiveTab, User } from '../types';
 import { captureGPSLocation } from '../lib/location';
 // @ts-ignore
@@ -18,6 +18,8 @@ interface HeaderProps {
   currentUser: User | null;
   onOpenLogin: (tab?: 'public' | 'admin') => void;
   onDetectGPS?: () => void;
+  isDarkMode: boolean;
+  onToggleDarkMode: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,6 +35,8 @@ export const Header: React.FC<HeaderProps> = ({
   currentUser,
   onOpenLogin,
   onDetectGPS,
+  isDarkMode,
+  onToggleDarkMode,
 }) => {
   const [isLocating, setIsLocating] = useState(false);
   const [appLogo, setAppLogo] = useState<string>(() => {
@@ -127,6 +131,20 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls */}
         <div className="flex items-center gap-1.5">
+          {/* Dark Mode Toggle Button */}
+          <button
+            onClick={onToggleDarkMode}
+            className="p-2 rounded-xl transition bg-white/10 hover:bg-white/20 text-white border border-white/15 cursor-pointer flex items-center justify-center shadow-xs"
+            title={isDarkMode ? 'Mudar para Modo Claro (Dia)' : 'Mudar para Modo Escuro (Noite)'}
+            aria-label={isDarkMode ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
+          >
+            {isDarkMode ? (
+              <Sun className="w-4.5 h-4.5 text-yellow-300 fill-yellow-300" />
+            ) : (
+              <Moon className="w-4.5 h-4.5 text-yellow-200" />
+            )}
+          </button>
+
           {/* User Account / Login Button */}
           <button
             onClick={() => onOpenLogin('public')}

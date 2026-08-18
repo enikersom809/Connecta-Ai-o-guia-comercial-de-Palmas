@@ -102,12 +102,12 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
   const isComercioGroup = place.tipo === 'comercio' || place.tipo === 'pizzaria' || place.tipo === 'lanchonetes' || place.tipo === 'gastronomia';
 
   const cardContent = (
-    <div className={`w-full h-full bg-white overflow-hidden flex flex-col justify-between ${
+    <div className={`w-full h-full bg-white dark:bg-gray-900 overflow-hidden flex flex-col justify-between ${
       isPremiumOrFeatured 
         ? 'rounded-[calc(1rem-2.5px)]' 
         : isComercioGroup 
         ? 'rounded-[calc(1rem-2px)]' 
-        : 'rounded-2xl border border-gray-100'
+        : 'rounded-2xl border border-gray-100 dark:border-gray-800'
     }`}>
       {/* Image Container with Automatic Carousel */}
       <div
@@ -238,18 +238,18 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
       <div className="p-3 sm:p-4 space-y-2.5 flex-1 flex flex-col justify-between">
         <div className="space-y-2">
           {/* Description */}
-          <p className="text-gray-600 text-[11px] sm:text-xs leading-relaxed line-clamp-2">{place.descricao}</p>
+          <p className="text-gray-600 dark:text-gray-300 text-[11px] sm:text-xs leading-relaxed line-clamp-2">{place.descricao}</p>
 
           {/* Tags */}
           {place.tags && place.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {place.tags.slice(0, 2).map((tag, idx) => (
-                <span key={idx} className="bg-gray-100 text-gray-600 text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-md">
+                <span key={idx} className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-md">
                   #{tag}
                 </span>
               ))}
               {place.tags.length > 2 && (
-                <span className="text-gray-400 text-[9px] font-medium self-center">
+                <span className="text-gray-400 dark:text-gray-500 text-[9px] font-medium self-center">
                   +{place.tags.length - 2}
                 </span>
               )}
@@ -257,10 +257,10 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
           )}
 
           {/* Location, Hours & Views Counter */}
-          <div className="text-[11px] sm:text-xs text-gray-500 space-y-1 pt-1.5 border-t border-gray-100">
+          <div className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 space-y-1 pt-1.5 border-t border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-between gap-1">
               {(place.endereco || place.bairro) ? (
-                <div className="flex items-center gap-1 text-gray-600 truncate">
+                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300 truncate">
                   <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
                   <span className="truncate">{place.endereco || place.bairro}</span>
                 </div>
@@ -268,16 +268,16 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
 
               {/* View Counter Badge */}
               <div
-                className="flex items-center gap-1 text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded-md font-bold text-[10px] shrink-0"
+                className="flex items-center gap-1 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900/40 px-1.5 py-0.5 rounded-md font-bold text-[10px] shrink-0"
                 title={`${place.views || 0} visualizações acumuladas`}
               >
-                <Eye className="w-3 h-3 text-blue-600 shrink-0" />
+                <Eye className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
                 <span>{place.views || 0}</span>
               </div>
             </div>
 
             {place.horario && (
-              <div className="flex items-center gap-1 text-gray-500">
+              <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
                 <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                 <span className="truncate">{place.horario}</span>
               </div>
@@ -317,7 +317,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
           {/* Details Button */}
           <button
             onClick={() => onSelectPlace(place)}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-2 rounded-xl transition flex items-center justify-center gap-1 text-[11px] sm:text-xs border border-gray-200"
+            className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold py-2 px-2 rounded-xl transition flex items-center justify-center gap-1 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-700"
           >
             <Eye className="w-3.5 h-3.5 shrink-0" />
             <span>Detalhes</span>

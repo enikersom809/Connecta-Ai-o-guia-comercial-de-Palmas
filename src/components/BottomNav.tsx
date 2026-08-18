@@ -24,16 +24,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   jobsCount = 4,
 }) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 shadow-2xl z-40 transition-colors">
       <div className="max-w-md mx-auto flex justify-around p-1.5">
         {/* Guia Comercial Main Section Button */}
         <button
           onClick={() => onSectionChange('guia')}
           id="nav-btn-guia"
-          className={`flex flex-col items-center p-2 rounded-xl transition-all ${
+          className={`flex flex-col items-center p-2 rounded-xl transition-all cursor-pointer ${
             activeSection === 'guia'
-              ? 'text-red-600 font-bold scale-105'
-              : 'text-gray-400 hover:text-gray-700'
+              ? 'text-red-600 dark:text-red-400 font-bold scale-105'
+              : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
           }`}
         >
           <LayoutGrid className={`w-5 h-5 mb-0.5 ${activeSection === 'guia' ? 'stroke-[2.5]' : ''}`} />
@@ -44,10 +44,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         <button
           onClick={() => onSectionChange('empregos')}
           id="nav-btn-empregos"
-          className={`flex flex-col items-center p-2 rounded-xl transition-all relative ${
+          className={`flex flex-col items-center p-2 rounded-xl transition-all relative cursor-pointer ${
             activeSection === 'empregos'
-              ? 'text-red-600 font-bold scale-105'
-              : 'text-gray-400 hover:text-gray-700'
+              ? 'text-red-600 dark:text-red-400 font-bold scale-105'
+              : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
           }`}
         >
           <Briefcase className={`w-5 h-5 mb-0.5 ${activeSection === 'empregos' ? 'stroke-[2.5]' : ''}`} />
@@ -64,10 +64,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             onTabChange('favoritos');
           }}
           id="tab-favoritos"
-          className={`flex flex-col items-center p-2 rounded-xl transition-all relative ${
+          className={`flex flex-col items-center p-2 rounded-xl transition-all relative cursor-pointer ${
             activeSection === 'guia' && activeTab === 'favoritos'
-              ? 'text-rose-600 font-bold scale-105'
-              : 'text-gray-400 hover:text-gray-700'
+              ? 'text-rose-600 dark:text-rose-400 font-bold scale-105'
+              : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
           }`}
         >
           <Heart className={`w-5 h-5 mb-0.5 ${activeTab === 'favoritos' ? 'fill-current stroke-[2]' : ''}`} />
@@ -83,7 +83,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         {onOpenLogin && (
           <button
             onClick={onOpenLogin}
-            className="flex flex-col items-center p-2 rounded-xl text-red-600 font-bold hover:text-red-700 transition-all"
+            className="flex flex-col items-center p-2 rounded-xl text-red-600 dark:text-red-400 font-bold hover:text-red-700 dark:hover:text-red-300 transition-all cursor-pointer"
             title="Tela de Login"
           >
             <UserIcon className="w-5 h-5 mb-0.5" />

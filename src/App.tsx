@@ -75,6 +75,32 @@ export default function App() {
   const STORAGE_KEY_CITY = 'guiacidade_cidade_v1';
   const STORAGE_KEY_USER = 'guiacidade_usuario_v1';
   const STORAGE_KEY_JOBS = 'guiacidade_vagas_v1';
+  const STORAGE_KEY_DARK = 'guiacidade_dark_mode_v1';
+
+  // Dark Mode State (inicia como falso e alterna dinamicamente)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_DARK);
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {}
+    return false;
+  });
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => !prev);
+  };
+
+  // Efeito para adicionar ou remover a classe 'dark' direto na tag document.documentElement toda vez que o estado mudar
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY_DARK, JSON.stringify(isDarkMode));
+    } catch (e) {}
+  }, [isDarkMode]);
 
   // Auth & User State
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -526,7 +552,7 @@ export default function App() {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen text-gray-800 font-sans pb-24 selection:bg-yellow-200">
+    <div className="bg-gray-100 dark:bg-gray-950 min-h-screen text-gray-800 dark:text-gray-100 font-sans pb-24 selection:bg-yellow-200 transition-colors duration-200">
       {/* Top Main Header */}
       <Header
         activeTab={activeTab}
@@ -544,6 +570,8 @@ export default function App() {
         currentUser={currentUser}
         onOpenLogin={handleOpenLogin}
         onDetectGPS={handleDetectGPSInApp}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={toggleDarkMode}
       />
 
       {/* Banner Carrossel (Visível no Guia Comercial) */}
@@ -569,21 +597,21 @@ export default function App() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por nome ou produto..."
-                className="w-full p-3 pl-10 bg-white border border-gray-200 rounded-xl shadow-xs focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                className="w-full p-3 pl-10 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white rounded-xl shadow-xs focus:outline-none focus:ring-2 focus:ring-red-500 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
               <Search className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
             </div>
 
             {/* SELETOR DE CATEGORIAS */}
-            <div className="bg-white p-3 rounded-2xl border border-gray-200 shadow-xs">
+            <div className="bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs">
               <div className="flex items-center justify-between mb-2.5 px-1">
-                <p className="text-xs font-black text-gray-900 uppercase tracking-wider">
+                <p className="text-xs font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">
                   CATEGORIAS
                 </p>
                 {activeTab !== 'todos' && (
                   <button
                     onClick={() => setActiveTab('todos')}
-                    className="text-[11px] font-bold text-red-600 hover:underline cursor-pointer"
+                    className="text-[11px] font-bold text-red-600 dark:text-red-400 hover:underline cursor-pointer"
                   >
                     Ver Todas
                   </button>
@@ -614,14 +642,14 @@ export default function App() {
                       className={`snap-start shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition text-left border flex items-center justify-between gap-2 cursor-pointer ${
                         ativo
                           ? 'bg-red-600 text-white border-red-600 shadow-xs'
-                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+                          : 'bg-gray-50 dark:bg-gray-800/80 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >
                       <span className="truncate">{label}</span>
                       {count > 0 && (
                         <span
                           className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
-                            ativo ? 'bg-white text-red-600' : 'bg-gray-200 text-gray-600'
+                            ativo ? 'bg-white text-red-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                           }`}
                         >
                           {count}
@@ -640,12 +668,12 @@ export default function App() {
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => alert('Área de cupons em breve! Cadastre-se no aplicativo para receber em primeira mão.')}
-                className="bg-white p-3 rounded-2xl border border-gray-200 shadow-xs flex flex-col items-center justify-center text-center hover:bg-red-50 transition group cursor-pointer"
+                className="bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs flex flex-col items-center justify-center text-center hover:bg-red-50 dark:hover:bg-gray-800/80 transition group cursor-pointer"
               >
-                <div className="w-10 h-10 bg-red-100 group-hover:bg-red-600 rounded-full flex items-center justify-center transition mb-1.5 text-red-600 group-hover:text-white">
+                <div className="w-10 h-10 bg-red-100 dark:bg-red-950/60 group-hover:bg-red-600 rounded-full flex items-center justify-center transition mb-1.5 text-red-600 dark:text-red-400 group-hover:text-white">
                   <Ticket className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-black uppercase text-gray-700 tracking-tight leading-none">
+                <span className="text-[10px] font-black uppercase text-gray-700 dark:text-gray-200 tracking-tight leading-none">
                   Cupons
                 </span>
                 <span className="text-[8px] text-gray-400 mt-0.5">De Descontos</span>
@@ -653,12 +681,12 @@ export default function App() {
 
               <button
                 onClick={() => setActiveTab('supermercados')}
-                className="bg-white p-3 rounded-2xl border border-gray-200 shadow-xs flex flex-col items-center justify-center text-center hover:bg-yellow-50 transition group cursor-pointer"
+                className="bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs flex flex-col items-center justify-center text-center hover:bg-yellow-50 dark:hover:bg-gray-800/80 transition group cursor-pointer"
               >
-                <div className="w-10 h-10 bg-yellow-100 group-hover:bg-yellow-500 rounded-full flex items-center justify-center transition mb-1.5 text-yellow-600 group-hover:text-gray-900">
+                <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-950/60 group-hover:bg-yellow-500 rounded-full flex items-center justify-center transition mb-1.5 text-yellow-600 dark:text-yellow-400 group-hover:text-gray-900">
                   <Rocket className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-black uppercase text-gray-700 tracking-tight leading-none">
+                <span className="text-[10px] font-black uppercase text-gray-700 dark:text-gray-200 tracking-tight leading-none">
                   Empresas
                 </span>
                 <span className="text-[8px] text-gray-400 mt-0.5">Em Destaque</span>
@@ -673,12 +701,12 @@ export default function App() {
                     alert('Distribuidora de Gás & Água: Entre em contato pelo WhatsApp no topo!');
                   }
                 }}
-                className="bg-white p-3 rounded-2xl border border-gray-200 shadow-xs flex flex-col items-center justify-center text-center hover:bg-blue-50 transition group cursor-pointer"
+                className="bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs flex flex-col items-center justify-center text-center hover:bg-blue-50 dark:hover:bg-gray-800/80 transition group cursor-pointer"
               >
-                <div className="w-10 h-10 bg-blue-100 group-hover:bg-blue-600 rounded-full flex items-center justify-center transition mb-1.5 text-blue-600 group-hover:text-white">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/60 group-hover:bg-blue-600 rounded-full flex items-center justify-center transition mb-1.5 text-blue-600 dark:text-blue-400 group-hover:text-white">
                   <Droplet className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-black uppercase text-gray-700 tracking-tight leading-none">
+                <span className="text-[10px] font-black uppercase text-gray-700 dark:text-gray-200 tracking-tight leading-none">
                   Pedir Gás
                 </span>
                 <span className="text-[8px] text-gray-400 mt-0.5">& Água Rápido</span>
@@ -689,13 +717,13 @@ export default function App() {
             <div className="flex items-center justify-between mb-3 px-1">
               <h2
                 id="titulo-categoria"
-                className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2"
+                className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2"
               >
                 <span>{getCategoryTitle()}</span>
               </h2>
               <span
                 id="contador-locais"
-                className="text-xs text-gray-500 bg-gray-200 px-3 py-1 rounded-full font-medium"
+                className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full font-medium"
               >
                 {filteredPlaces.length}{' '}
                 {filteredPlaces.length === 1 ? 'local' : 'locais'}
@@ -717,15 +745,15 @@ export default function App() {
               </div>
             ) : (
               /* Estado Vazio de Busca */
-              <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-3">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-1">
+              <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm space-y-3">
+                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-1">
                   <SearchX className="text-gray-400 w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-gray-800 mb-1">
+                  <h4 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-1">
                     Nenhum resultado encontrado
                   </h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                     {searchQuery
                       ? `Não encontramos resultados para "${searchQuery}". Tente buscar por termos mais genéricos.`
                       : activeTab === 'favoritos'
@@ -738,7 +766,7 @@ export default function App() {
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition"
+                      className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
                     >
                       Limpar Pesquisa
                     </button>
@@ -746,7 +774,7 @@ export default function App() {
                   {currentUser?.role === 'admin' && (
                     <button
                       onClick={handleOpenAdminWithAuth}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1 cursor-pointer"
                     >
                       <PlusCircle className="w-4 h-4" />
                       <span>Adicionar Local</span>
@@ -762,13 +790,13 @@ export default function App() {
       {/* SEÇÃO VAGAS DE EMPREGO (Dedicada) */}
       {activeSection === 'empregos' && (
         <main id="conteudo-empregos" className="max-w-5xl mx-auto p-4 mt-2">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-200 pb-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-200 dark:border-gray-800 pb-4">
             <div>
-              <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
-                <Briefcase className="text-blue-600 w-6 h-6" />
+              <h2 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <Briefcase className="text-blue-600 dark:text-blue-400 w-6 h-6" />
                 <span>Balcão de Empregos Local</span>
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Oportunidades de trabalho e utilidade pública atualizadas na cidade
               </p>
             </div>
@@ -779,7 +807,7 @@ export default function App() {
                 value={searchJobQuery}
                 onChange={(e) => setSearchJobQuery(e.target.value)}
                 placeholder="Buscar cargo ou empresa..."
-                className="w-full p-2.5 pl-9 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs"
+                className="w-full p-2.5 pl-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
               <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
             </div>
@@ -795,34 +823,34 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: index * 0.07, ease: 'easeOut' }}
                   onClick={() => setSelectedJob(job)}
-                  className="bg-white rounded-2xl p-5 border border-gray-200 shadow-xs hover:shadow-md hover:scale-105 transition-all duration-300 cursor-pointer flex flex-col justify-between group space-y-3"
+                  className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-200 dark:border-gray-800 shadow-xs hover:shadow-md hover:scale-105 transition-all duration-300 cursor-pointer flex flex-col justify-between group space-y-3"
                 >
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
-                      <span className="text-[9px] bg-emerald-100 text-emerald-800 font-black px-2 py-0.5 rounded uppercase">
+                      <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded uppercase">
                         Vaga Aberta
                       </span>
-                      <span className="text-[10px] text-gray-400 font-medium">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
                         {job.createdAt || 'Recente'}
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
                         {job.nome}
                       </h3>
-                      <p className="text-xs font-semibold text-gray-600 flex items-center gap-1 mt-0.5">
-                        <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1 mt-0.5">
+                        <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                         <span>{job.empresa}</span>
                       </p>
                     </div>
-                    <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
                       {job.descricao}
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
-                    <span className="font-semibold text-emerald-700 flex items-center gap-1">
-                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       {job.salario}
                     </span>
                     <button
@@ -830,7 +858,7 @@ export default function App() {
                         e.stopPropagation();
                         setSelectedJob(job);
                       }}
-                      className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-xl transition text-xs flex items-center gap-1"
+                      className="bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold px-3 py-1.5 rounded-xl transition text-xs flex items-center gap-1 cursor-pointer"
                     >
                       <span>Ver Vaga</span>
                     </button>
@@ -839,10 +867,10 @@ export default function App() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-2">
-              <Briefcase className="w-10 h-10 text-gray-300 mx-auto" />
-              <h4 className="text-sm font-bold text-gray-800">Nenhuma vaga encontrada</h4>
-              <p className="text-xs text-gray-500">
+            <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm space-y-2">
+              <Briefcase className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto" />
+              <h4 className="text-sm font-bold text-gray-800 dark:text-gray-100">Nenhuma vaga encontrada</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Tente ajustar a sua busca por cargos ou empresas da cidade.
               </p>
             </div>
