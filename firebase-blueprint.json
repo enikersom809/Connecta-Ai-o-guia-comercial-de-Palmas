@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "places": {
+      "title": "Places",
+      "description": "Commercial listings and establishments",
+      "properties": {
+        "nome": { "type": "string" },
+        "categoria": { "type": "string" },
+        "tipo": { "type": "string" },
+        "cidade": { "type": "string" },
+        "bairro": { "type": "string" },
+        "endereco": { "type": "string" },
+        "telefone": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "descricao": { "type": "string" },
+        "imagem": { "type": "string" },
+        "galeria": { "type": "array", "items": { "type": "string" } },
+        "avaliacao": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "premium": { "type": "boolean" },
+        "apenasBanner": { "type": "boolean" },
+        "views": { "type": "number" },
+        "expiraEm": { "type": "string" },
+        "isOpen": { "type": "boolean" },
+        "instagram": { "type": "string" },
+        "link": { "type": "string" },
+        "linkiFood": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["nome", "categoria", "tipo", "cidade"]
+    },
+    "jobs": {
+      "title": "Jobs",
+      "description": "Job vacancies",
+      "properties": {
+        "titulo": { "type": "string" },
+        "empresa": { "type": "string" },
+        "cidade": { "type": "string" },
+        "bairro": { "type": "string" },
+        "tipo": { "type": "string" },
+        "salario": { "type": "string" },
+        "descricao": { "type": "string" },
+        "requisitos": { "type": "array", "items": { "type": "string" } },
+        "linkContato": { "type": "string" },
+        "expiraEm": { "type": "string" },
+        "ativa": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["titulo", "empresa", "cidade"]
+    }
+  }
+}

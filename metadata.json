@@ -1,0 +1,6 @@
+{
+  "name": "CONECTA.AÍ - Guia Comercial de Palmas",
+  "description": "O app que conecta você ao comércio local de Palmas com catálogo comercial, ofertas e empregos.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

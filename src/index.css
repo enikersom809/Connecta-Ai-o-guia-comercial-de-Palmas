@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+@keyframes flip3d {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+.animate-flip-3d {
+  animation: flip3d 4s linear infinite;
+  transform-style: preserve-3d;
+}
+
+/* Animações de Borda Neon Giratória (VaneMotion Conic Gradient Loop) */
+@keyframes spin360 {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin360 6s linear infinite;
+}
+
+.animate-spin-medium {
+  animation: spin360 3.5s linear infinite;
+}
+
+/* Classes do Efeito VaneMotion (Luz Giratória Neon Vermelho Forte no Banner) */
+.banner-container {
+  position: relative;
+  width: 100%;
+  background: #0a0002;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 0, 51, 0.2);
+  margin-bottom: 1.5rem;
+  z-index: 1;
+}
+
+/* Camada base de cor vermelha neon girando */
+.banner-container::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 0, 51, 0.2) 40deg,
+    #ff0033 90deg,
+    #ff3355 110deg,
+    #ffffff 120deg, /* Ponto quente do laser neon */
+    #ff0033 130deg,
+    transparent 170deg,
+    transparent 230deg,
+    #ff0033 270deg,
+    #ff3355 290deg,
+    #ffffff 300deg, /* Feixe oposto brilhante */
+    #ff0033 310deg,
+    transparent 350deg,
+    transparent 360deg
+  );
+  animation: spinVane 4s linear infinite;
+  filter: blur(4px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Feixe nítido e intenso de luz vermelha forte neon nas bordas */
+.banner-container::after {
+  content: '';
+  position: absolute;
+  width: 220%;
+  height: 220%;
+  top: -60%;
+  left: -60%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 70deg,
+    rgba(255, 0, 51, 0.4) 90deg,
+    #ff0033 110deg,
+    #ff4d6d 118deg,
+    #ffffff 120deg, /* Núcleo branco ultra-brilhante do neon */
+    #ff4d6d 122deg,
+    #ff0033 130deg,
+    transparent 160deg,
+    transparent 250deg,
+    rgba(255, 0, 51, 0.4) 270deg,
+    #ff0033 290deg,
+    #ff4d6d 298deg,
+    #ffffff 300deg, /* Núcleo branco ultra-brilhante do neon oposto */
+    #ff4d6d 302deg,
+    #ff0033 310deg,
+    transparent 340deg,
+    transparent 360deg
+  );
+  animation: spinVane 4s linear infinite;
+  filter: drop-shadow(0 0 10px #ff0033) drop-shadow(0 0 20px #ff0022);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Camada extra de reforço de neon dinâmico */
+.vane-glow {
+  position: absolute;
+  width: 240%;
+  height: 240%;
+  top: -70%;
+  left: -70%;
+  background: conic-gradient(
+    from 180deg,
+    transparent 0deg,
+    #ff0033 60deg,
+    #ff6680 75deg,
+    #ffffff 80deg,
+    #ff0033 90deg,
+    transparent 140deg,
+    transparent 240deg,
+    #ff0033 280deg,
+    #ff6680 295deg,
+    #ffffff 300deg,
+    #ff0033 310deg,
+    transparent 360deg
+  );
+  animation: spinVane 4s linear infinite;
+  opacity: 0.85;
+  filter: blur(4px) drop-shadow(0 0 15px #ff0033);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* A Linha Vermelha Neon Superior com alto brilho */
+.vane-light-line {
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 25%,
+    #ff0033 45%,
+    #ffffff 50%,
+    #ff0033 55%,
+    transparent 75%,
+    transparent 100%
+  );
+  animation: moveLight 3.5s ease-in-out infinite;
+  filter: drop-shadow(0px 0px 12px #ff0033) drop-shadow(0px 0px 6px #ffffff);
+  z-index: 30;
+  pointer-events: none;
+}
+
+@keyframes moveLight {
+  0% {
+    transform: translateX(-35%);
+  }
+  50% {
+    transform: translateX(35%);
+  }
+  100% {
+    transform: translateX(-35%);
+  }
+}
+
+/* Conteúdo do Banner em Tela Cheia (Recuo de 3.5px para a borda neon reluzir por todo o perímetro) */
+.banner-content {
+  position: absolute;
+  top: 3.5px;
+  left: 3.5px;
+  right: 3.5px;
+  bottom: 3.5px;
+  border-radius: 20.5px;
+  overflow: hidden;
+  z-index: 5;
+  background: #0b0204;
+}
+
+/* Estilização dos textos (Mantendo o padrão do CONECTA.AÍ) */
+.tag-destaque {
+  background: #ffcc00; 
+  color: #000000;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-bottom: 12px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.titulo-ponto {
+  color: #ffffff;
+  font-size: 28px;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  line-height: 1.1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+
+@media (min-width: 768px) {
+  .titulo-ponto {
+    font-size: 32px;
+  }
+}
+
+.descricao-ponto {
+  font-size: 13px;
+  color: #e2e2e8;
+  line-height: 1.4;
+  margin: 0 0 15px 0;
+  max-width: 90%;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+/* Pontinhos do Carrossel */
+.carousel-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.dot.active, .dot:hover {
+  background: #ffcc00; 
+  width: 18px;
+  border-radius: 4px;
+}
+
+/* ANIMAÇÃO DE ROTAÇÃO VANEMOTION */
+@keyframes spinVane {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
