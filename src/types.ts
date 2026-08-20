@@ -78,6 +78,7 @@ export interface JobOffer {
   descricao: string;
   requisitos?: string;
   linkContato: string; // WhatsApp or link
+  emailContato?: string; // E-mail para recebimento de currículos
   createdAt?: string;
   ativa?: boolean;
 }

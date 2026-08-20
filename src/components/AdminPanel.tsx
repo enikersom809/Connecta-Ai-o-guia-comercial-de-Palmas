@@ -38,6 +38,7 @@ import {
   Radio,
   CheckCircle2,
   Smartphone,
+  Mail,
 } from 'lucide-react';
 import { Place, PlaceCategory, User, JobOffer } from '../types';
 import { dicionarioCategorias } from '../App';
@@ -265,13 +266,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [vLocal, setVLocal] = useState('');
   const [vSalario, setVSalario] = useState('');
   const [vLink, setVLink] = useState('');
+  const [vEmail, setVEmail] = useState('');
   const [vDetalhes, setVDetalhes] = useState('');
   const [vagaSuccessMsg, setVagaSuccessMsg] = useState('');
 
   const handleSalvarNovaVaga = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!vCargo.trim() || !vEmpresa.trim() || !vLocal.trim() || !vSalario.trim() || !vLink.trim() || !vDetalhes.trim()) {
-      alert('Por favor, preencha todos os campos obrigatórios da vaga.');
+    if (!vCargo.trim() || !vEmpresa.trim() || !vLocal.trim() || !vSalario.trim() || (!vLink.trim() && !vEmail.trim()) || !vDetalhes.trim()) {
+      alert('Por favor, preencha todos os campos obrigatórios da vaga (incluindo WhatsApp/Link ou E-mail para contato).');
       return;
     }
 
@@ -281,7 +283,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         empresa: vEmpresa.trim(),
         local: vLocal.trim(),
         salario: vSalario.trim(),
-        linkContato: vLink.trim(),
+        linkContato: vLink.trim() || (vEmail.trim() ? `mailto:${vEmail.trim()}` : ''),
+        emailContato: vEmail.trim() || undefined,
         descricao: vDetalhes.trim(),
         ativa: true,
       });
@@ -295,6 +298,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setVLocal('');
     setVSalario('');
     setVLink('');
+    setVEmail('');
     setVDetalhes('');
   };
 
@@ -1485,22 +1489,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Link Direto para Envio de Currículo * (WhatsApp ou Formulário)
-                </label>
-                <input
-                  type="url"
-                  id="v-link"
-                  value={vLink}
-                  onChange={(e) => setVLink(e.target.value)}
-                  placeholder="https://wa.me"
-                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium text-gray-900"
-                  required
-                />
-                <p className="text-[10px] text-gray-400 mt-1">
-                  💡 <i>Use o formato de link do WhatsApp para o candidato falar direto com o RH da empresa.</i>
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1.5">
+                    <MessageCircle className="w-3.5 h-3.5 text-green-600" />
+                    <span>WhatsApp / Link para Envio de Currículo</span>
+                  </label>
+                  <input
+                    type="url"
+                    id="v-link"
+                    value={vLink}
+                    onChange={(e) => setVLink(e.target.value)}
+                    placeholder="https://wa.me/5563999999999"
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium text-gray-900"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    💡 <i>Ex: https://wa.me/5563999999999 para o candidato falar direto com o RH.</i>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-blue-600" />
+                    <span>E-mail para Recebimento de Currículo</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="v-email"
+                    value={vEmail}
+                    onChange={(e) => setVEmail(e.target.value)}
+                    placeholder="Ex: vagas.empresa@gmail.com"
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium text-gray-900"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    ✉️ <i>Candidatos poderão clicar para abrir o aplicativo de e-mail com currículo em anexo.</i>
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -1680,7 +1704,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <p className="text-xs text-gray-600 font-medium">
                         {job.empresa} • {job.local} • {job.salario}
                       </p>
-                      <p className="text-[11px] text-gray-500 line-clamp-1">{job.descricao}</p>
+                      <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                        {job.linkContato && (
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-semibold flex items-center gap-1">
+                            <MessageCircle className="w-3 h-3" /> WhatsApp/Link
+                          </span>
+                        )}
+                        {job.emailContato && (
+                          <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md font-semibold flex items-center gap-1">
+                            <Mail className="w-3 h-3" /> {job.emailContato}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-500 line-clamp-1 mt-1">{job.descricao}</p>
                     </div>
 
                     {onDeleteJob && (

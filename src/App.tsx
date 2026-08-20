@@ -26,7 +26,7 @@ import { LoginModal } from './components/LoginModal';
 import { FeaturedCarousel } from './components/FeaturedCarousel';
 import { BottomNav } from './components/BottomNav';
 import { JobModal } from './components/JobModal';
-import { SearchX, Sparkles, Store, TreePine, MapPin, Heart, PlusCircle, Search, Briefcase, Building2, DollarSign, Ticket, Rocket, Droplet } from 'lucide-react';
+import { SearchX, Sparkles, Store, TreePine, MapPin, Heart, PlusCircle, Search, Briefcase, Building2, DollarSign, Ticket, Rocket, Droplet, Mail, MessageCircle } from 'lucide-react';
 
 export const dicionarioCategorias: Record<string, string> = {
   todos: 'Todos os Anúncios & Locais',
@@ -846,6 +846,19 @@ export default function App() {
                     <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
                       {job.descricao}
                     </p>
+
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      {job.linkContato && !job.linkContato.startsWith('mailto:') && (
+                        <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold px-2 py-0.5 rounded-md border border-emerald-100 dark:border-emerald-800/60">
+                          <MessageCircle className="w-3 h-3" /> WhatsApp
+                        </span>
+                      )}
+                      {(job.emailContato || (job.linkContato && job.linkContato.startsWith('mailto:'))) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-semibold px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-800/60">
+                          <Mail className="w-3 h-3" /> E-mail
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
