@@ -4,7 +4,7 @@
   "description": "O app que conecta você ao comércio local de Palmas!",
   "icons": [
     {
-      "src": "/src/assets/images/pwa_app_icon_1785847796498.jpg",
+      "src": "/pwa-icon.jpg",
       "type": "image/jpeg",
       "sizes": "192x192 512x512",
       "purpose": "any maskable"

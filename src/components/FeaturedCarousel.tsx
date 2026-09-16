@@ -93,23 +93,65 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
   ];
 
   const totalSlides = slides.length;
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Se houver mais de 1 slide, cria clones para permitir transição contínua sem retroceder
+  const extendedSlides = totalSlides > 1
+    ? [slides[totalSlides - 1], ...slides, slides[0]]
+    : slides;
+
+  const [currentIndex, setCurrentIndex] = useState(totalSlides > 1 ? 1 : 0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const isTransitioningRef = useRef(false);
+
+  // Garantir índice correto caso totalSlides mude dinamicamente
+  useEffect(() => {
+    if (totalSlides > 1) {
+      setIsTransitioning(false);
+      setCurrentIndex(1);
+    } else {
+      setCurrentIndex(0);
+    }
+  }, [totalSlides]);
 
   // Navegação
   const nextSlide = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % totalSlides);
+    if (totalSlides <= 1 || isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => prev + 1);
   };
 
   const prevSlide = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+    if (totalSlides <= 1 || isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => prev - 1);
   };
 
   const goToSlide = (idx: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setCurrentIndex(idx);
+    if (isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+    setIsTransitioning(true);
+    setCurrentIndex(idx + 1);
+  };
+
+  // Quando a animação CSS termina: se alcançou um clone, teleporta instantaneamente sem animação
+  const handleTransitionEnd = () => {
+    isTransitioningRef.current = false;
+    if (totalSlides <= 1) return;
+
+    if (currentIndex >= extendedSlides.length - 1) {
+      // Chegou no clone do primeiro slide (no final) -> pula instantaneamente para o slide 1 real
+      setIsTransitioning(false);
+      setCurrentIndex(1);
+    } else if (currentIndex <= 0) {
+      // Chegou no clone do último slide (no início) -> pula instantaneamente para o slide totalSlides real
+      setIsTransitioning(false);
+      setCurrentIndex(totalSlides);
+    }
   };
 
   // Suporte a gesto de arrastar/deslizar com o dedo (Touch Swipe) no celular
@@ -143,16 +185,24 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
     touchEndXRef.current = null;
   };
 
-  // Autoplay Effect (Alterna automaticamente os slides a cada 4.5 segundos)
+  // Autoplay Effect (Alterna automaticamente os slides a cada 4.5 segundos sempre avançando em loop infinito)
   useEffect(() => {
     if (totalSlides <= 1 || isHovered) return;
 
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % totalSlides);
+      if (!isTransitioningRef.current) {
+        isTransitioningRef.current = true;
+        setIsTransitioning(true);
+        setCurrentIndex((prev) => prev + 1);
+      }
     }, 4500);
 
     return () => clearInterval(timer);
   }, [totalSlides, isHovered]);
+
+  const activeDotIndex = totalSlides > 1
+    ? (currentIndex - 1 + totalSlides) % totalSlides
+    : 0;
 
   return (
     <div className="relative w-full mb-6">
@@ -179,17 +229,21 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
             <ImageIcon className="w-16 h-16 sm:w-20 sm:h-20" />
           </div>
 
-          {/* Container de Carrossel com Transição Suave */}
+          {/* Container de Carrossel com Transição Suave e Loop Infinito Contínuo */}
           <div
             id="carousel-container"
-            className="w-full h-full flex z-10 relative transition-transform duration-500 ease-out"
+            onTransitionEnd={handleTransitionEnd}
+            className={`w-full h-full flex z-10 relative ${
+              isTransitioning ? 'transition-transform duration-500 ease-out' : 'transition-none'
+            }`}
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
-            {slides.map((slide) => {
+            {extendedSlides.map((slide, slideIndex) => {
+              const uniqueKey = `${slide.id}-ext-${slideIndex}`;
               if (slide.isPromo) {
                 return (
                   <div
-                    key={slide.id}
+                    key={uniqueKey}
                     className="min-w-full w-full h-full relative flex-shrink-0 shrink-0 select-none overflow-hidden"
                   >
                     {/* Imagem de Fundo do Slide Promocional */}
@@ -239,7 +293,7 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
               const placeObj = 'place' in slide ? slide.place : null;
               return (
                 <div
-                  key={slide.id}
+                  key={uniqueKey}
                   onClick={() => onSelectPlace && placeObj && onSelectPlace(placeObj)}
                   className="min-w-full w-full h-full relative flex-shrink-0 shrink-0 select-none overflow-hidden cursor-pointer group/slide bg-gray-900"
                 >
@@ -304,7 +358,7 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
                   id={`carousel-dot-${idx}`}
                   type="button"
                   onClick={(e) => goToSlide(idx, e)}
-                  className={`dot ${idx === currentIndex ? 'active' : ''}`}
+                  className={`dot ${idx === activeDotIndex ? 'active' : ''}`}
                   aria-label={`Slide ${idx + 1}`}
                 />
               ))}

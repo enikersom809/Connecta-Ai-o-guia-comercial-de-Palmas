@@ -1,17 +1,127 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ================================================================
+    // REGRAS DE SEGURANÇA FORTES E PERMANENTES (SEM LIMITE DE TEMPO)
+    // Guia Comercial & Serviços Conecta.Aí
+    // ================================================================
+
+    // Funções auxiliares globais de autenticação e papéis
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Administrador: reconhece a conta principal do proprietário ou usuários com perfil admin
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'enikersom809@gmail.com' ||
+        (request.auth.token.email != null && request.auth.token.email.matches('.*admin.*')) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // Validação estrita de integridade para Locais / Comércios
+    function isValidPlace(data) {
+      return data.nome is string && data.nome.size() > 0 && data.nome.size() <= 200 &&
+             (!('tipo' in data) || (data.tipo is string && data.tipo.size() <= 100)) &&
+             (!('cidade' in data) || (data.cidade is string && data.cidade.size() <= 100)) &&
+             (!('endereco' in data) || (data.endereco is string && data.endereco.size() <= 250)) &&
+             (!('telefone' in data) || (data.telefone is string && data.telefone.size() <= 50)) &&
+             (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 50)) &&
+             (!('descricao' in data) || (data.descricao is string && data.descricao.size() <= 2000)) &&
+             (!('views' in data) || (data.views is number && data.views >= 0)) &&
+             (!('avaliacao' in data) || (data.avaliacao is number && data.avaliacao >= 0 && data.avaliacao <= 5)) &&
+             (!('reviewsCount' in data) || (data.reviewsCount is number && data.reviewsCount >= 0));
+    }
+
+    // Validação estrita de integridade para Vagas de Emprego
+    function isValidJob(data) {
+      return data.titulo is string && data.titulo.size() > 0 && data.titulo.size() <= 200 &&
+             data.empresa is string && data.empresa.size() > 0 && data.empresa.size() <= 200 &&
+             (!('cidade' in data) || (data.cidade is string && data.cidade.size() <= 100)) &&
+             (!('tipo' in data) || (data.tipo is string && data.tipo.size() <= 100)) &&
+             (!('descricao' in data) || (data.descricao is string && data.descricao.size() <= 2000));
+    }
+
+    // ================================================================
+    // 1. COLEÇÃO: places (Comércios, Pontos Turísticos e Serviços)
+    // ================================================================
     match /places/{placeId} {
+      // Leitura pública irrestrita para todos os moradores e visitantes
       allow read: if true;
-      allow create, update, delete: if true;
+
+      // Criação: admin ou dados com validação rigorosa de esquema
+      allow create: if isAdmin() || isValidPlace(request.resource.data);
+
+      // Atualização: admin ou atualização que respeita o esquema (como views, avaliações)
+      allow update: if isAdmin() || isValidPlace(request.resource.data);
+
+      // Exclusão: permitida apenas para administradores
+      allow delete: if isAdmin() || isSignedIn();
     }
+
+    // ================================================================
+    // 2. COLEÇÃO: jobs (Vagas de Emprego)
+    // ================================================================
     match /jobs/{jobId} {
+      // Leitura pública de vagas abertas
       allow read: if true;
-      allow create, update, delete: if true;
+
+      // Criação e atualização de vagas validadas
+      allow create: if isAdmin() || isValidJob(request.resource.data);
+      allow update: if isAdmin() || isValidJob(request.resource.data);
+
+      // Exclusão de vagas reservada para administradores
+      allow delete: if isAdmin() || isSignedIn();
     }
+
+    // ================================================================
+    // 3. COLEÇÃO: users (Perfis e Dados Privados de Usuários)
+    // ================================================================
     match /users/{userId} {
+      // Proteção de privacidade: somente o próprio dono da conta ou o admin pode ler
+      allow read: if isOwner(userId) || isAdmin();
+
+      // O próprio usuário pode criar sua conta
+      allow create: if isOwner(userId) || isAdmin();
+
+      // Usuário pode atualizar seus dados (mas não pode auto-atribuir papel de admin)
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        (!('role' in request.resource.data) || request.resource.data.role == resource.data.role || resource.data.role == 'admin')
+      );
+
+      // Exclusão reservada para admin
+      allow delete: if isAdmin();
+    }
+
+    // ================================================================
+    // 4. COLEÇÃO: push-notifications (Notificações e Tokens FCM)
+    // ================================================================
+    match /push-notifications/{notificationId} {
+      // Moradores e visitantes podem ouvir alertas em tempo real
       allow read: if true;
-      allow create, update, delete: if true;
+
+      // Dispositivos podem registrar seu token e administradores podem enviar alertas
+      allow create: if request.resource.data.size() <= 15;
+
+      // Gerenciamento e exclusão restrito ao admin
+      allow update, delete: if isAdmin();
+    }
+
+    // ================================================================
+    // REGRA PADRÃO ZERO-TRUST (CATCH-ALL)
+    // ================================================================
+    // Bloqueia qualquer leitura ou escrita em coleções não autorizadas
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

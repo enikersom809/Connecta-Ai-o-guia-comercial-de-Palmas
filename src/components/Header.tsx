@@ -3,7 +3,7 @@ import { Search, Heart, Store, TreePine, MapPin, Sparkles, X, User as UserIcon, 
 import { ActiveTab, User } from '../types';
 import { captureGPSLocation } from '../lib/location';
 // @ts-ignore
-import defaultLogoImg from '../assets/images/pwa_app_icon_1785847796498.jpg';
+import defaultLogoImg from '../assets/images/conecta_pwa_icon_1788363330980.jpg';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [appLogo, setAppLogo] = useState<string>(() => {
     const saved = localStorage.getItem('guia_app_logo');
     // If empty or previously saved old version, default to the official uploaded logo
-    if (!saved || saved.includes('conecta_ai_logo_1785840340241')) {
+    if (!saved || saved.includes('conecta_ai_logo') || saved.includes('pwa_app_icon')) {
       return defaultLogoImg;
     }
     return saved;
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {appLogo ? (
                   <img
                     src={appLogo}
-                    alt="Logo GuiaLocal"
+                    alt="Logo CONECTA.AÍ"
                     className="w-full h-full object-contain"
                     referrerPolicy="no-referrer"
                   />

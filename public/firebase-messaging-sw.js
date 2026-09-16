@@ -29,8 +29,8 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title || payload.data?.title || 'CONECTA.AÍ - Palmas';
   const notificationOptions = {
     body: payload.notification?.body || payload.data?.body || payload.data?.message || 'Nova atualização no Guia Comercial da Cidade!',
-    icon: '/src/assets/images/pwa_app_icon_1785847796498.jpg',
-    badge: '/src/assets/images/pwa_app_icon_1785847796498.jpg',
+    icon: '/pwa-icon.jpg',
+    badge: '/pwa-icon.jpg',
     vibrate: [200, 100, 200],
     tag: 'conecta-ai-push-' + Date.now(),
     data: payload.data || payload
@@ -48,8 +48,8 @@ self.addEventListener('push', (event) => {
     const title = data.notification?.title || data.title || data.data?.title || 'CONECTA.AÍ - Palmas';
     const options = {
       body: data.notification?.body || data.body || data.data?.body || 'Nova notificação!',
-      icon: '/src/assets/images/pwa_app_icon_1785847796498.jpg',
-      badge: '/src/assets/images/pwa_app_icon_1785847796498.jpg',
+      icon: '/pwa-icon.jpg',
+      badge: '/pwa-icon.jpg',
       vibrate: [200, 100, 200],
       data: data
     };
@@ -60,7 +60,7 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
       self.registration.showNotification('CONECTA.AÍ - Notificação da Cidade', {
         body: rawText,
-        icon: '/src/assets/images/pwa_app_icon_1785847796498.jpg'
+        icon: '/pwa-icon.jpg'
       })
     );
   }

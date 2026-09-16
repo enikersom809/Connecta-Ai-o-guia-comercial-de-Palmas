@@ -48,6 +48,53 @@
         "createdAt": { "type": "string" }
       },
       "required": ["titulo", "empresa", "cidade"]
+    },
+    "users": {
+      "title": "Users",
+      "description": "User profiles and credentials",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "public"] },
+        "avatar": { "type": "string" },
+        "provider": { "type": "string" },
+        "city": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "pushNotifications": {
+      "title": "Push Notifications",
+      "description": "Device tokens and push alerts history",
+      "properties": {
+        "token": { "type": "string" },
+        "titulo": { "type": "string" },
+        "conteudo": { "type": "string" },
+        "cidade": { "type": "string" },
+        "criadoEm": { "type": "string" },
+        "disparadoPor": { "type": "string" },
+        "status": { "type": "string" },
+        "ativo": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "/places/{placeId}": {
+      "schema": "places",
+      "description": "Stores all public commercial establishments and locations"
+    },
+    "/jobs/{jobId}": {
+      "schema": "jobs",
+      "description": "Stores job vacancies available in the cities"
+    },
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "Stores user account profile information"
+    },
+    "/push-notifications/{notificationId}": {
+      "schema": "pushNotifications",
+      "description": "Stores FCM push tokens and dispatched broadcast history"
     }
   }
 }

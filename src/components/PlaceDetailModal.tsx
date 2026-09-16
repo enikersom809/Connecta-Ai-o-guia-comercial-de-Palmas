@@ -8,6 +8,7 @@ interface PlaceDetailModalProps {
   onClose: () => void;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  onRatePlace?: (placeId: string, rating: number, comment: string, author: string) => void;
 }
 
 interface UserReview {
@@ -23,6 +24,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
   onClose,
   isFavorite,
   onToggleFavorite,
+  onRatePlace,
 }) => {
   if (!place) return null;
 
@@ -31,22 +33,31 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
   const [userRating, setUserRating] = useState(5);
   const [authorName, setAuthorName] = useState('');
   const [commentText, setCommentText] = useState('');
-  const [reviewsList, setReviewsList] = useState<UserReview[]>([
-    {
-      id: 'rev-1',
-      author: 'Mariana Souza',
-      rating: 5,
-      comment: 'Atendimento incrível e lugar maravilhoso! Recomendo muito a todos que visitam a cidade.',
-      date: 'Há 2 dias',
-    },
-    {
-      id: 'rev-2',
-      author: 'Lucas Oliveira',
-      rating: 5,
-      comment: 'Lugar super agradável, bem localizado e fácil acesso. Ótima dica do GuiaCidade!',
-      date: 'Há 1 semana',
-    }
-  ]);
+  const [reviewsList, setReviewsList] = useState<UserReview[]>(() => {
+    try {
+      const saved = localStorage.getItem(`guia_reviews_${place.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+
+  // Atualizar lista de avaliações quando o local selecionado mudar
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`guia_reviews_${place.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setReviewsList(parsed);
+          return;
+        }
+      }
+    } catch {}
+    setReviewsList([]);
+  }, [place.id]);
 
   // Compile photos for detail modal hero & gallery
   const images = useMemo(() => {
@@ -79,15 +90,25 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
     e.preventDefault();
     if (!commentText.trim()) return;
 
+    const finalAuthor = authorName.trim() || 'Visitante GuiaCidade';
     const newRev: UserReview = {
       id: Date.now().toString(),
-      author: authorName.trim() || 'Visitante GuiaCidade',
+      author: finalAuthor,
       rating: userRating,
       comment: commentText.trim(),
       date: 'Agora mesmo',
     };
 
-    setReviewsList([newRev, ...reviewsList]);
+    const updatedList = [newRev, ...reviewsList];
+    setReviewsList(updatedList);
+    try {
+      localStorage.setItem(`guia_reviews_${place.id}`, JSON.stringify(updatedList));
+    } catch {}
+
+    if (onRatePlace) {
+      onRatePlace(place.id, userRating, commentText.trim(), finalAuthor);
+    }
+
     setCommentText('');
     setAuthorName('');
   };
@@ -202,24 +223,30 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
           {/* Title and Rating Overlay */}
           <div className="absolute bottom-4 left-4 right-4 text-white z-10 pointer-events-none">
             <h2 className="text-2xl font-bold leading-tight drop-shadow-md">{place.nome}</h2>
-            {place.avaliacao && (
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${i < Math.floor(place.avaliacao || 5) ? 'fill-yellow-400' : 'text-gray-400'}`}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm font-semibold">{place.avaliacao.toFixed(1)}</span>
-                <span className="text-xs text-gray-300">({place.reviewsCount || 42} avaliações)</span>
-                <span className="text-xs text-blue-200 bg-black/40 px-2 py-0.5 rounded-full border border-white/20 flex items-center gap-1 font-semibold ml-auto">
-                  <Eye className="w-3 h-3 text-cyan-300" />
-                  {place.views || 0} visualizações
-                </span>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-4 h-4 ${
+                      place.avaliacao && place.avaliacao > 0 && i < Math.round(place.avaliacao)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-400'
+                    }`}
+                  />
+                ))}
               </div>
-            )}
+              <span className="text-sm font-semibold">
+                {place.avaliacao && place.avaliacao > 0 ? place.avaliacao.toFixed(1) : '0.0'}
+              </span>
+              <span className="text-xs text-gray-300">
+                ({place.reviewsCount || 0} {(place.reviewsCount || 0) === 1 ? 'avaliação' : 'avaliações'})
+              </span>
+              <span className="text-xs text-blue-200 bg-black/40 px-2 py-0.5 rounded-full border border-white/20 flex items-center gap-1 font-semibold ml-auto">
+                <Eye className="w-3 h-3 text-cyan-300" />
+                {place.views || 0} {(place.views || 0) === 1 ? 'visualização' : 'visualizações'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -355,26 +382,33 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
           <div className="pt-3 border-t border-gray-100 space-y-3">
             <h3 className="text-sm font-bold text-gray-900 flex items-center justify-between">
               <span>Avaliações dos Visitantes</span>
-              <span className="text-xs font-normal text-gray-500">{reviewsList.length} comentários</span>
+              <span className="text-xs font-normal text-gray-500">{reviewsList.length} {reviewsList.length === 1 ? 'comentário' : 'comentários'}</span>
             </h3>
 
             {/* List of Reviews */}
-            <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
-              {reviewsList.map((rev) => (
-                <div key={rev.id} className="bg-gray-50 p-3 rounded-xl text-xs space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-gray-800">{rev.author}</span>
-                    <span className="text-[10px] text-gray-400">{rev.date}</span>
+            {reviewsList.length > 0 ? (
+              <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                {reviewsList.map((rev) => (
+                  <div key={rev.id} className="bg-gray-50 p-3 rounded-xl text-xs space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-gray-800">{rev.author}</span>
+                      <span className="text-[10px] text-gray-400">{rev.date}</span>
+                    </div>
+                    <div className="flex text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'fill-yellow-400' : 'text-gray-300'}`} />
+                      ))}
+                    </div>
+                    <p className="text-gray-600">{rev.comment}</p>
                   </div>
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'fill-yellow-400' : 'text-gray-300'}`} />
-                    ))}
-                  </div>
-                  <p className="text-gray-600">{rev.comment}</p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-3.5 text-center text-xs text-gray-500 space-y-1">
+                <p className="font-semibold text-gray-700">⭐ Nenhuma avaliação registrada ainda</p>
+                <p className="text-[11px] text-gray-400">As notas começam do 0. Seja o primeiro visitante a avaliar e dar uma nota!</p>
+              </div>
+            )}
 
             {/* Add Review Form */}
             <form onSubmit={handleAddReview} className="bg-blue-50/60 p-3 rounded-2xl space-y-2 border border-blue-100">

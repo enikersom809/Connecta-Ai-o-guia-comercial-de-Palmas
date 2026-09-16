@@ -269,6 +269,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [vEmail, setVEmail] = useState('');
   const [vDetalhes, setVDetalhes] = useState('');
   const [vagaSuccessMsg, setVagaSuccessMsg] = useState('');
+  const [jobSearchAdmin, setJobSearchAdmin] = useState('');
+  const [jobDeleteSuccessMsg, setJobDeleteSuccessMsg] = useState('');
+  const [vagaParaExcluir, setVagaParaExcluir] = useState<JobOffer | null>(null);
+
+  const handleAbrirConfirmacaoExcluirVaga = (job: JobOffer) => {
+    setVagaParaExcluir(job);
+  };
+
+  const handleConfirmarExclusaoVaga = () => {
+    if (!vagaParaExcluir) return;
+    if (onDeleteJob) {
+      onDeleteJob(vagaParaExcluir.id);
+      setJobDeleteSuccessMsg(`Vaga "${vagaParaExcluir.nome}" excluída com sucesso!`);
+      setTimeout(() => setJobDeleteSuccessMsg(''), 4000);
+    }
+    setVagaParaExcluir(null);
+  };
+
+  const filteredAdminJobs = jobs.filter((j) => {
+    if (!jobSearchAdmin.trim()) return true;
+    const term = jobSearchAdmin.toLowerCase();
+    return (
+      j.nome.toLowerCase().includes(term) ||
+      j.empresa.toLowerCase().includes(term) ||
+      j.local.toLowerCase().includes(term)
+    );
+  });
 
   const handleSalvarNovaVaga = (e: React.FormEvent) => {
     e.preventDefault();
@@ -313,20 +340,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setPassStatusMsg(null);
 
     const savedPassword = localStorage.getItem('guia_admin_password');
-    const validDefaultKeys = ['123456', 'admin', 'guia2026', 'admin123', 'master'];
+    const expectedCurrentPass = savedPassword || '124020';
 
-    // If password exists in localStorage, currentPassInput must match it.
-    // If not set yet, currentPassInput can match any default key or empty string if default.
-    if (savedPassword) {
-      if (currentPassInput.trim() !== savedPassword) {
-        setPassStatusMsg({ type: 'error', text: 'Senha atual incorreta.' });
-        return;
-      }
-    } else {
-      if (currentPassInput.trim() !== '' && !validDefaultKeys.includes(currentPassInput.trim().toLowerCase())) {
-        setPassStatusMsg({ type: 'error', text: 'Senha atual incorreta. A senha padrão é 123456 ou admin.' });
-        return;
-      }
+    if (currentPassInput.trim() !== expectedCurrentPass) {
+      setPassStatusMsg({ type: 'error', text: 'Senha atual incorreta. A senha padrão é 124020.' });
+      return;
     }
 
     if (newPassInput.trim().length < 4) {
@@ -381,7 +399,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [telefone, setTelefone] = useState('');
   const [horario, setHorario] = useState('');
   const [tagsInput, setTagsInput] = useState('');
-  const [avaliacao, setAvaliacao] = useState('4.8');
+  const [avaliacao, setAvaliacao] = useState('0');
 
   // AI Loading States
   const [isAiOptimizing, setIsAiOptimizing] = useState(false);
@@ -461,7 +479,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       premium: true,
       apenasBanner: bannerExclusivoCarrossel,
       isOpen: true,
-      avaliacao: 5.0,
+      avaliacao: 0,
+      reviewsCount: 0,
+      views: 0,
       tags: ['Turismo', 'Destaque', 'Banner'],
     };
 
@@ -494,7 +514,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setTelefone(place.telefone || '');
     setHorario(place.horario || '');
     setTagsInput(place.tags ? place.tags.join(', ') : '');
-    setAvaliacao(place.avaliacao ? place.avaliacao.toString() : '4.8');
+    setAvaliacao(place.avaliacao !== undefined ? place.avaliacao.toString() : '0');
     setActiveAdminTab('form');
   };
 
@@ -519,7 +539,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setTelefone('');
     setHorario('');
     setTagsInput('');
-    setAvaliacao('4.8');
+    setAvaliacao('0');
     setAiSuccessMsg('');
     setAiErrorMsg('');
   };
@@ -594,8 +614,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           cidade: generatorCity,
           horario: p.horario || 'Seg a Sáb: 08h às 20h',
           tags: p.tags || ['Agradável', 'Recomendado'],
-          avaliacao: p.avaliacao || 4.8,
-          reviewsCount: 35,
+          avaliacao: 0,
+          reviewsCount: 0,
+          views: 0,
           isOpen: true,
           createdAt: new Date().toISOString(),
         }));
@@ -624,6 +645,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     const mainImg = imagem.trim() || galeria[0] || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
 
+    const parsedRating = parseFloat(avaliacao);
     const placeData = {
       tipo,
       nome: nome.trim(),
@@ -640,7 +662,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       longitude: longitude.trim(),
       horario: horario.trim(),
       tags: parsedTags,
-      avaliacao: parseFloat(avaliacao) || 4.8,
+      avaliacao: isNaN(parsedRating) ? 0 : Math.max(0, parsedRating),
+      reviewsCount: 0,
+      views: 0,
       premium,
       apenasBanner,
       expiraEm: premium ? expiraEm : '',
@@ -648,7 +672,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     };
 
     if (editingPlaceId) {
-      onUpdatePlace(editingPlaceId, placeData);
+      // Quando estiver editando, preserva as visualizações e avaliações já recebidas se não foram alteradas
+      const existingPlace = places.find((p) => p.id === editingPlaceId);
+      onUpdatePlace(editingPlaceId, {
+        ...placeData,
+        views: existingPlace?.views || 0,
+        reviewsCount: existingPlace?.reviewsCount || 0,
+        avaliacao: isNaN(parsedRating) ? (existingPlace?.avaliacao || 0) : parsedRating,
+      });
     } else {
       onAddPlace(placeData);
     }
@@ -1248,12 +1279,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Nota Inicial (1 a 5)</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Nota Inicial (0 a 5)</label>
                     <input
                       type="number"
                       step="0.1"
                       max="5"
-                      min="1"
+                      min="0"
                       value={avaliacao}
                       onChange={(e) => setAvaliacao(e.target.value)}
                       className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-center font-bold text-gray-900"
@@ -1552,6 +1583,102 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
               </div>
             </form>
+
+            {/* LISTA DE VAGAS ATIVAS PARA GERENCIAMENTO / EXCLUSÃO DE VAGAS PREENCHIDAS */}
+            <div className="mt-8 pt-6 border-t border-gray-200 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-bold text-gray-900 text-sm sm:text-base flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-green-600" />
+                    <span>Vagas Publicadas no Balcão ({jobs.length})</span>
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Quando uma vaga for preenchida pela empresa, exclua-a abaixo para retirá-la imediatamente do aplicativo.
+                  </p>
+                </div>
+
+                {jobs.length > 2 && (
+                  <input
+                    type="text"
+                    value={jobSearchAdmin}
+                    onChange={(e) => setJobSearchAdmin(e.target.value)}
+                    placeholder="Filtrar por cargo ou empresa..."
+                    className="p-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 w-full sm:w-56 text-gray-900"
+                  />
+                )}
+              </div>
+
+              {jobDeleteSuccessMsg && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{jobDeleteSuccessMsg}</span>
+                </div>
+              )}
+
+              {filteredAdminJobs.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                  <Briefcase className="w-8 h-8 text-gray-300 mx-auto mb-1.5" />
+                  <p className="text-xs font-bold text-gray-600">
+                    {jobs.length === 0 ? 'Nenhuma vaga publicada no momento.' : 'Nenhuma vaga encontrada com esse filtro.'}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {jobs.length === 0 ? 'Cadastre novas oportunidades no formulário acima.' : 'Tente buscar por outro termo.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {filteredAdminJobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 hover:bg-gray-100/70 rounded-xl border border-gray-200 transition-all gap-3 shadow-xs"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-md uppercase">
+                            Vaga Ativa
+                          </span>
+                          <h4 className="font-bold text-gray-900 text-sm">{job.nome}</h4>
+                        </div>
+                        <p className="text-xs text-gray-600 font-medium flex flex-wrap items-center gap-2">
+                          <span>🏢 <b>{job.empresa}</b></span>
+                          <span>•</span>
+                          <span>📍 {job.local}</span>
+                          <span>•</span>
+                          <span className="text-emerald-700 font-bold">💰 {job.salario}</span>
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                          {job.linkContato && !job.linkContato.startsWith('mailto:') && (
+                            <span className="text-[10px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md font-semibold border border-emerald-200/60 flex items-center gap-1">
+                              <MessageCircle className="w-3 h-3 text-emerald-600" /> WhatsApp
+                            </span>
+                          )}
+                          {(job.emailContato || (job.linkContato && job.linkContato.startsWith('mailto:'))) && (
+                            <span className="text-[10px] bg-blue-50 text-blue-800 px-2 py-0.5 rounded-md font-semibold border border-blue-200/60 flex items-center gap-1">
+                              <Mail className="w-3 h-3 text-blue-600" /> {job.emailContato || 'E-mail'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-500 line-clamp-1 mt-1 font-normal">
+                          {job.descricao}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleAbrirConfirmacaoExcluirVaga(job)}
+                          className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-xs px-3.5 py-2 rounded-xl border border-rose-200 hover:border-rose-600 transition shadow-xs active:scale-95 cursor-pointer"
+                          title="Excluir vaga preenchida"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Excluir Vaga (Preenchida)</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -1721,11 +1848,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                     {onDeleteJob && (
                       <button
-                        onClick={() => onDeleteJob(job.id)}
-                        className="p-2 text-rose-600 hover:bg-rose-100 rounded-xl transition self-end sm:self-center cursor-pointer"
-                        title="Excluir Vaga"
+                        type="button"
+                        onClick={() => handleAbrirConfirmacaoExcluirVaga(job)}
+                        className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-xs px-3 py-1.5 rounded-xl border border-rose-200 hover:border-rose-600 transition shadow-xs self-end sm:self-center cursor-pointer active:scale-95"
+                        title="Excluir Vaga Preenchida"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Excluir Vaga (Preenchida)</span>
                       </button>
                     )}
                   </div>
@@ -1829,13 +1958,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   type="password"
                   value={currentPassInput}
                   onChange={(e) => setCurrentPassInput(e.target.value)}
-                  placeholder={localStorage.getItem('guia_admin_password') ? 'Digite sua senha atual' : 'Padrão: 123456 ou admin'}
+                  placeholder={localStorage.getItem('guia_admin_password') ? 'Digite sua senha atual' : 'Padrão: 124020'}
                   className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 text-sm font-medium text-gray-900"
                   required
                 />
                 {!localStorage.getItem('guia_admin_password') && (
                   <p className="text-[11px] text-gray-500 mt-1">
-                    * Se ainda não alterou, a senha padrão é <b>123456</b> ou <b>admin</b>.
+                    * Se ainda não alterou, a senha padrão é <b>124020</b>.
                   </p>
                 )}
               </div>
@@ -1997,6 +2126,52 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
         )}
       </main>
+
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE VAGA */}
+      {vagaParaExcluir && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="p-3 bg-rose-100 rounded-full">
+                <Trash2 className="w-6 h-6 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg">Excluir Vaga Preenchida?</h3>
+                <p className="text-xs text-gray-500">Esta ação removerá a vaga do aplicativo.</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-200 text-xs space-y-1 text-gray-700">
+              <p><b>Cargo:</b> {vagaParaExcluir.nome}</p>
+              <p><b>Empresa:</b> {vagaParaExcluir.empresa}</p>
+              <p><b>Local:</b> {vagaParaExcluir.local}</p>
+              {vagaParaExcluir.salario && <p><b>Salário:</b> {vagaParaExcluir.salario}</p>}
+            </div>
+
+            <p className="text-xs text-gray-600">
+              Ao confirmar, a vaga será excluída do Balcão de Empregos em tempo real no banco de dados e nos celulares dos usuários.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setVagaParaExcluir(null)}
+                className="px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmarExclusaoVaga}
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Sim, Excluir Vaga</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

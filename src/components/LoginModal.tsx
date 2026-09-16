@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Shield,
@@ -54,6 +54,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Synchronize authTab if initialTab changes
+  useEffect(() => {
+    setAuthTab(initialTab);
+  }, [initialTab]);
+
   // Form Fields - Population
   const [userName, setUserName] = useState('');
   const [userCity, setUserCity] = useState(selectedCity.replace(/[\"'\\]+/g, '') || 'Taquaruçu');
@@ -61,8 +66,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [userPassword, setUserPassword] = useState('');
 
   // Form Fields - Admin
-  const [adminEmail, setAdminEmail] = useState('admin@guialocal.com');
-  const [adminKey, setAdminKey] = useState('');
+  const [adminEmail, setAdminEmail] = useState('connectaaioguiacomercial@gmail.com');
+  const [adminKey, setAdminKey] = useState('124020');
 
   // Status & Error States
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
@@ -220,22 +225,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
 
     const savedPassword = localStorage.getItem('guia_admin_password');
-    const validKeys = ['123456', 'admin', 'guia2026', 'admin123', 'master'];
+    const expectedPassword = savedPassword || '124020';
     const typedPassword = userPassword.trim();
     const typedEmail = emailOrPhone.trim().toLowerCase();
 
-    let isAdminCreds = false;
-    if (savedPassword) {
-      isAdminCreds = typedPassword === savedPassword || (typedEmail.includes('admin') && typedPassword === savedPassword);
-    } else {
-      isAdminCreds = validKeys.includes(typedPassword.toLowerCase()) || typedEmail.includes('admin');
-    }
+    const isAdminCreds =
+      (typedEmail === 'connectaaioguiacomercial@gmail.com' || typedEmail === 'admin') &&
+      typedPassword === expectedPassword;
 
     if (isAdminCreds && !isRegistering) {
       let adminUser: User = {
         id: `admin-${Date.now()}`,
-        name: 'Administrador GuiaLocal',
-        email: typedEmail.includes('@') ? typedEmail : 'admin@guialocal.com',
+        name: 'Administrador',
+        email: 'connectaaioguiacomercial@gmail.com',
         role: 'admin',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
         provider: 'email',
@@ -253,7 +255,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    const emailToUse = typedEmail.includes('@') ? typedEmail : `${typedEmail}@guialocal.com`;
+    const emailToUse = typedEmail.includes('@') ? typedEmail : `${typedEmail}@conectaai.com`;
 
     try {
       let user: User;
@@ -322,58 +324,69 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setErrorMessage('');
 
     const savedPassword = localStorage.getItem('guia_admin_password');
-    const validKeys = ['123456', 'admin', 'guia2026', 'admin123', 'master'];
+    const expectedPassword = savedPassword || '124020';
     const enteredKey = adminKey.trim();
+    const enteredEmail = (adminEmail.trim() || 'connectaaioguiacomercial@gmail.com').toLowerCase();
 
-    let isValid = false;
-    if (savedPassword) {
-      isValid = enteredKey === savedPassword;
-    } else {
-      isValid = enteredKey === '' || validKeys.includes(enteredKey.toLowerCase()) || enteredKey.length >= 4;
+    // Senha deve ser exatamente 124020 (ou a nova senha configurada pelo admin)
+    const isKeyValid = enteredKey === expectedPassword;
+    const isEmailValid = enteredEmail === 'connectaaioguiacomercial@gmail.com' || enteredEmail === 'admin';
+
+    if (!isEmailValid) {
+      setErrorMessage('E-mail de Administrador incorreto. Utilize connectaaioguiacomercial@gmail.com');
+      return;
     }
 
-    if (isValid) {
-      let adminUser: User = {
-        id: `admin-${Date.now()}`,
-        name: 'Administrador GuiaLocal',
-        email: adminEmail || 'admin@guialocal.com',
-        role: 'admin',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
-        provider: 'email',
-        city: userCity || 'Taquaruçu',
-        createdAt: new Date().toISOString(),
-      };
-
-      adminUser = await enrichUserWithGPS(adminUser);
-      await saveUserToFirestore(adminUser);
-      setSuccessMessage('Acesso de Administrador confirmado e salvo no Firebase!');
-      setTimeout(() => {
-        onLoginSuccess(adminUser);
-        onClose();
-      }, 600);
-    } else {
-      setErrorMessage('Senha / Chave de Administrador incorreta.');
+    if (!isKeyValid) {
+      setErrorMessage('Senha de Administrador incorreta.');
+      return;
     }
+
+    let adminUser: User = {
+      id: `admin-${Date.now()}`,
+      name: 'Administrador',
+      email: 'connectaaioguiacomercial@gmail.com',
+      role: 'admin',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
+      provider: 'email',
+      city: userCity || 'Taquaruçu',
+      createdAt: new Date().toISOString(),
+    };
+
+    adminUser = await enrichUserWithGPS(adminUser);
+    await saveUserToFirestore(adminUser);
+    setSuccessMessage('Acesso de Administrador confirmado e salvo no Firebase!');
+    setTimeout(() => {
+      onLoginSuccess(adminUser);
+      onClose();
+    }, 600);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
       
-      {/* SPLIT CARD CONTAINER - ESTILO DO PROTÓTIPO */}
-      <div className="relative w-full max-w-4xl min-h-[480px] bg-white rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row my-auto border border-gray-100">
+      {/* GOOGLE GLOW WRAPPER COM LUZ CIRCULANTE (AZUL, VERMELHO, AMARELO, VERDE) */}
+      <div className="google-glow-wrapper w-full max-w-4xl my-auto">
         
-        {/* BOTÃO FECHAR */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-40 p-2 text-gray-500 hover:text-gray-900 md:text-white/80 md:hover:text-white bg-gray-100 md:bg-white/10 hover:bg-gray-200 md:hover:bg-white/20 rounded-full transition cursor-pointer"
-          aria-label="Fechar"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* FEIXES DE LUZ GOOGLE GIRANDO AO REDOR */}
+        <div className="google-glow-beam" />
+        <div className="google-glow-beam-sharp" />
+
+        {/* SPLIT CARD CONTAINER COM DIVISÃO NA DIAGONAL */}
+        <div className="relative z-10 w-full min-h-[500px] bg-white rounded-[28px] overflow-hidden flex flex-col md:flex-row">
+          
+          {/* BOTÃO FECHAR */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-40 p-2 text-white/80 hover:text-white bg-black/40 md:bg-white/10 hover:bg-black/60 md:hover:bg-white/20 backdrop-blur-md rounded-full transition cursor-pointer shadow-md"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
         {/* LADO ESQUERDO: FORMULÁRIO BRANCO COM FLOATING LABELS */}
-        <div className="w-full md:w-1/2 p-6 sm:p-10 flex flex-col justify-center z-10 bg-white">
-          
+        <div className="w-full md:w-[54%] p-6 sm:p-10 flex flex-col justify-center z-10 bg-white">
+
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
@@ -398,7 +411,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <div className="relative w-20 h-20 mx-auto">
                 <img
                   src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}
-                  alt={currentUser.name}
+                  alt={currentUser.role === 'admin' ? 'Administrador' : currentUser.name}
                   className="w-full h-full rounded-full object-cover border-4 border-black shadow-md"
                 />
                 <span
@@ -411,10 +424,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-gray-900">{currentUser.name}</h3>
-                <p className="text-xs text-gray-500">{currentUser.email}</p>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {currentUser.role === 'admin' ? 'Administrador' : currentUser.name}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {currentUser.role === 'admin'
+                    ? 'connectaaioguiacomercial@gmail.com'
+                    : currentUser.email}
+                </p>
                 <span className="inline-block mt-2 px-3 py-1 bg-gray-200 text-gray-800 text-xs font-semibold rounded-full capitalize">
-                  {currentUser.role === 'admin' ? 'Administrador do Sistema' : 'Cidadão / Usuário Registrado'}
+                  {currentUser.role === 'admin' ? 'Administrador' : 'Usuário Registrado'}
                 </span>
               </div>
 
@@ -451,17 +470,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </div>
               )}
 
-              {/* FORMULÁRIO DO USUÁRIO */}
-              {authTab === 'public' && (
-                <form
-                  onSubmit={(e) => {
-                    if (userCity && onCityChange) {
-                      onCityChange(userCity.replace(/[\"'\\]+/g, ''));
-                    }
-                    handlePopulationSubmit(e);
-                  }}
-                  className="space-y-4 text-sm"
-                >
+              {/* FORMULÁRIO DO USUÁRIO COM MODO INTELIGENTE */}
+              <form
+                onSubmit={(e) => {
+                  if (userCity && onCityChange) {
+                    onCityChange(userCity.replace(/[\"'\\]+/g, ''));
+                  }
+                  handlePopulationSubmit(e);
+                }}
+                className="space-y-4 text-sm"
+              >
                   {/* Nome Completo (se Cadastro) */}
                   {isRegistering && (
                     <div className="relative w-full pt-2">
@@ -669,87 +687,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     </p>
                   </div>
                 </form>
-              )}
-
-              {/* FORMULÁRIO DO ADMINISTRADOR */}
-              {authTab === 'admin' && (
-                <form onSubmit={handleAdminSubmit} className="space-y-4 text-xs">
-                  <div className="bg-red-50 border border-red-200 text-red-900 p-3.5 rounded-2xl space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-red-900">
-                      <Sparkles className="w-4 h-4 text-yellow-500" />
-                      <span>Área Restrita do Administrador</span>
-                    </div>
-                    <p className="text-[11px] text-red-700 leading-snug">
-                      Gerencie comércios, vagas e banners do aplicativo.
-                    </p>
-                  </div>
-
-                  <div className="relative w-full pt-2">
-                    <input
-                      type="email"
-                      value={adminEmail}
-                      onFocus={() => setFocusedField('adminEmail')}
-                      onBlur={() => setFocusedField(null)}
-                      onChange={(e) => setAdminEmail(e.target.value)}
-                      required
-                      className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-red-600 outline-none pt-2 pb-1 pr-8 text-sm text-black transition-colors duration-300"
-                    />
-                    <label
-                      className={`absolute left-0 transition-all duration-300 pointer-events-none ${
-                        focusedField === 'adminEmail' || adminEmail
-                          ? '-top-2 text-[11px] font-semibold text-red-600'
-                          : 'top-3 text-xs text-gray-400'
-                      }`}
-                    >
-                      E-mail do Administrador
-                    </label>
-                    <Mail className="w-4 h-4 text-gray-400 absolute right-0 top-3 pointer-events-none" />
-                  </div>
-
-                  <div className="relative w-full pt-2">
-                    <input
-                      type="password"
-                      value={adminKey}
-                      onFocus={() => setFocusedField('adminKey')}
-                      onBlur={() => setFocusedField(null)}
-                      onChange={(e) => setAdminKey(e.target.value)}
-                      required
-                      className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-red-600 outline-none pt-2 pb-1 pr-8 text-sm text-black transition-colors duration-300"
-                    />
-                    <label
-                      className={`absolute left-0 transition-all duration-300 pointer-events-none ${
-                        focusedField === 'adminKey' || adminKey
-                          ? '-top-2 text-[11px] font-semibold text-red-600'
-                          : 'top-3 text-xs text-gray-400'
-                      }`}
-                    >
-                      Senha / Chave Mestra
-                    </label>
-                    <KeyRound className="w-4 h-4 text-gray-400 absolute right-0 top-3 pointer-events-none" />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-full transition shadow-md flex items-center justify-center gap-2 text-sm cursor-pointer mt-4"
-                  >
-                    <Shield className="w-4 h-4 text-yellow-300" />
-                    <span>Acessar Painel Admin</span>
-                  </button>
-                </form>
-              )}
             </>
           )}
         </div>
 
-        {/* LADO DIREITO: WELCOME PANEL COM EFEITO CORTE DIAGONAL E DESIGN PRETO ELEGANTE */}
-        <div className="w-full md:w-1/2 bg-black text-white p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden min-h-[220px]">
+        {/* LADO DIREITO: WELCOME PANEL COM CORTE DIAGONAL E DESIGN PRETO ELEGANTE */}
+        <div className="w-full md:w-[54%] md:-ml-[8%] bg-black text-white p-8 sm:p-12 pl-8 md:pl-16 flex flex-col justify-center relative overflow-hidden min-h-[260px] md:min-h-[500px] [clip-path:polygon(0_36px,100%_0,100%_100%,0_100%)] md:[clip-path:polygon(16%_0,100%_0,100%_100%,0%_100%)] z-20">
           
-          {/* CORTE INCLINADO DIAGONAL - EFEITO DA CLASSE .welcome-panel::before */}
-          <div className="hidden md:block absolute top-0 -left-12 w-24 h-full bg-black -skew-x-12 z-0"></div>
-
           {/* BACKGROUND DECORATIVO LIGHT GLOW & PINS */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/20 rounded-full filter blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/10 rounded-full filter blur-2xl pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 via-transparent to-amber-500/10 pointer-events-none"></div>
 
           <div className="relative z-10 space-y-4">
             <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm mb-2 shadow-inner">
@@ -776,6 +724,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           </div>
         </div>
 
+        </div>
       </div>
     </div>
   );

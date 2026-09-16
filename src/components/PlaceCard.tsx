@@ -224,10 +224,15 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
         <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white z-20 pointer-events-none">
           <div className="flex justify-between items-end gap-1.5">
             <h3 className="text-sm sm:text-base font-bold drop-shadow-md leading-snug line-clamp-1">{place.nome}</h3>
-            {place.avaliacao && (
-              <div className="bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg flex items-center gap-1 border border-white/20 shrink-0">
-                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                <span className="text-[10px] sm:text-xs font-bold">{place.avaliacao.toFixed(1)}</span>
+            {place.avaliacao !== undefined && (
+              <div
+                className="bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg flex items-center gap-1 border border-white/20 shrink-0"
+                title={place.avaliacao > 0 ? `Nota: ${place.avaliacao.toFixed(1)} (${place.reviewsCount || 0} avaliações)` : 'Sem avaliações ainda (Nota 0.0)'}
+              >
+                <Star className={`w-3 h-3 ${place.avaliacao > 0 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} />
+                <span className="text-[10px] sm:text-xs font-bold">
+                  {place.avaliacao > 0 ? place.avaliacao.toFixed(1) : '0.0'}
+                </span>
               </div>
             )}
           </div>

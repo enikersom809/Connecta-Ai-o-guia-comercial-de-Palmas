@@ -66,8 +66,8 @@ export async function savePlaceToFirestore(place: Place) {
     const docRef = doc(db, 'places', place.id);
     const cleanPlace = JSON.parse(JSON.stringify(place));
     await setDoc(docRef, cleanPlace, { merge: true });
-  } catch (err) {
-    console.error('Error saving place to Firestore:', err);
+  } catch (err: any) {
+    console.warn('Notice saving place to Firestore:', err?.message || err);
   }
 }
 
@@ -75,8 +75,8 @@ export async function deletePlaceFromFirestore(id: string) {
   try {
     const docRef = doc(db, 'places', id);
     await deleteDoc(docRef);
-  } catch (err) {
-    console.error('Error deleting place from Firestore:', err);
+  } catch (err: any) {
+    console.warn('Notice deleting place from Firestore:', err?.message || err);
   }
 }
 
@@ -89,8 +89,8 @@ export async function seedInitialPlacesInFirestore(places: Place[]) {
       batch.set(docRef, cleanPlace, { merge: true });
     });
     await batch.commit();
-  } catch (err) {
-    console.error('Error seeding places in Firestore:', err);
+  } catch (err: any) {
+    console.warn('Notice seeding places in Firestore:', err?.message || err);
   }
 }
 
@@ -99,8 +99,8 @@ export async function saveJobToFirestore(job: JobOffer) {
     const docRef = doc(db, 'jobs', job.id);
     const cleanJob = JSON.parse(JSON.stringify(job));
     await setDoc(docRef, cleanJob, { merge: true });
-  } catch (err) {
-    console.error('Error saving job to Firestore:', err);
+  } catch (err: any) {
+    console.warn('Notice saving job to Firestore:', err?.message || err);
   }
 }
 
@@ -108,8 +108,8 @@ export async function deleteJobFromFirestore(id: string) {
   try {
     const docRef = doc(db, 'jobs', id);
     await deleteDoc(docRef);
-  } catch (err) {
-    console.error('Error deleting job from Firestore:', err);
+  } catch (err: any) {
+    console.warn('Notice deleting job from Firestore:', err?.message || err);
   }
 }
 
@@ -122,8 +122,8 @@ export async function seedInitialJobsInFirestore(jobs: JobOffer[]) {
       batch.set(docRef, cleanJob, { merge: true });
     });
     await batch.commit();
-  } catch (err) {
-    console.error('Error seeding jobs in Firestore:', err);
+  } catch (err: any) {
+    console.warn('Notice seeding jobs in Firestore:', err?.message || err);
   }
 }
 
@@ -134,8 +134,8 @@ export async function saveUserToFirestore(user: User): Promise<void> {
     const userRef = doc(db, 'users', user.id);
     const cleanUser = JSON.parse(JSON.stringify(user));
     await setDoc(userRef, cleanUser, { merge: true });
-  } catch (err) {
-    console.error('Error saving user to Firestore:', err);
+  } catch (err: any) {
+    console.warn('Notice saving user to Firestore:', err?.message || err);
   }
 }
 
@@ -146,8 +146,8 @@ export async function getUserFromFirestore(id: string): Promise<User | null> {
     if (snap.exists()) {
       return { id: snap.id, ...snap.data() } as User;
     }
-  } catch (err) {
-    console.error('Error getting user from Firestore:', err);
+  } catch (err: any) {
+    console.warn('Notice getting user from Firestore:', err?.message || err);
   }
   return null;
 }

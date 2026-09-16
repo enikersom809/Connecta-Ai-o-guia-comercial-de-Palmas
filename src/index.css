@@ -259,3 +259,72 @@
   100% { transform: rotate(360deg); }
 }
 
+/* LUZ CIRCULANTE NAS CORES DO GOOGLE (AZUL, VERMELHO, AMARELO, VERDE) */
+@keyframes googleSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.google-glow-wrapper {
+  position: relative;
+  padding: 3.5px;
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7),
+              0 0 25px rgba(66, 133, 244, 0.35),
+              0 0 25px rgba(234, 67, 53, 0.35),
+              0 0 25px rgba(251, 188, 5, 0.35),
+              0 0 25px rgba(52, 168, 83, 0.35);
+}
+
+.google-glow-beam {
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  top: -100%;
+  left: -100%;
+  background: conic-gradient(
+    from 0deg,
+    #4285F4 0deg,
+    #4285F4 60deg,
+    #EA4335 90deg,
+    #EA4335 150deg,
+    #FBBC05 180deg,
+    #FBBC05 240deg,
+    #34A853 270deg,
+    #34A853 330deg,
+    #4285F4 360deg
+  );
+  animation: googleSpin 4s linear infinite;
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.google-glow-beam-sharp {
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  top: -100%;
+  left: -100%;
+  background: conic-gradient(
+    from 0deg,
+    #4285F4 0deg,
+    #4285F4 60deg,
+    #EA4335 90deg,
+    #EA4335 150deg,
+    #FBBC05 180deg,
+    #FBBC05 240deg,
+    #34A853 270deg,
+    #34A853 330deg,
+    #4285F4 360deg
+  );
+  animation: googleSpin 4s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+

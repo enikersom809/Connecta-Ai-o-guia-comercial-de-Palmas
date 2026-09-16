@@ -127,7 +127,7 @@ export async function initPushNotifications(): Promise<boolean> {
 export function exibirNotificacaoLocal(titulo: string, conteudo: string) {
   if (typeof window === 'undefined' || !('Notification' in window)) return;
 
-  const iconUrl = '/src/assets/images/pwa_app_icon_1785847796498.jpg';
+  const iconUrl = '/pwa-icon.jpg';
 
   if (Notification.permission === 'granted') {
     if (swRegistration && swRegistration.showNotification) {
@@ -205,19 +205,25 @@ export function escutarNotificacoesPush(onNewPush: (push: PushNotificationItem) 
 
     let initialLoadComplete = false;
 
-    return onSnapshot(q, (snapshot) => {
-      if (!initialLoadComplete) {
-        initialLoadComplete = true;
-        return;
-      }
-
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          const pushData = { id: change.doc.id, ...change.doc.data() } as PushNotificationItem;
-          onNewPush(pushData);
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        if (!initialLoadComplete) {
+          initialLoadComplete = true;
+          return;
         }
-      });
-    });
+
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const pushData = { id: change.doc.id, ...change.doc.data() } as PushNotificationItem;
+            onNewPush(pushData);
+          }
+        });
+      },
+      (error) => {
+        console.warn('Push notifications listener notice:', error?.message);
+      }
+    );
   } catch {
     return () => {};
   }
