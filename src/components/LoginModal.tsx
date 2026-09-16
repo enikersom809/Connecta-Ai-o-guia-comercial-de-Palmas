@@ -54,10 +54,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Synchronize authTab if initialTab changes
+  // Synchronize authTab if initialTab changes and reset passwords
   useEffect(() => {
     setAuthTab(initialTab);
   }, [initialTab]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setUserPassword('');
+      setEmailOrPhone('');
+      setErrorMessage('');
+      setSuccessMessage('');
+    }
+  }, [isOpen]);
 
   // Form Fields - Population
   const [userName, setUserName] = useState('');
@@ -66,8 +75,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [userPassword, setUserPassword] = useState('');
 
   // Form Fields - Admin
-  const [adminEmail, setAdminEmail] = useState('connectaaioguiacomercial@gmail.com');
-  const [adminKey, setAdminKey] = useState('124020');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminKey, setAdminKey] = useState('');
 
   // Status & Error States
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
@@ -375,15 +384,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* SPLIT CARD CONTAINER COM DIVISÃO NA DIAGONAL */}
         <div className="relative z-10 w-full min-h-[500px] bg-white rounded-[28px] overflow-hidden flex flex-col md:flex-row">
           
-          {/* BOTÃO FECHAR */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-40 p-2 text-white/80 hover:text-white bg-black/40 md:bg-white/10 hover:bg-black/60 md:hover:bg-white/20 backdrop-blur-md rounded-full transition cursor-pointer shadow-md"
-            aria-label="Fechar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
         {/* LADO ESQUERDO: FORMULÁRIO BRANCO COM FLOATING LABELS */}
         <div className="w-full md:w-[54%] p-6 sm:p-10 flex flex-col justify-center z-10 bg-white">
 
@@ -478,6 +478,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   }
                   handlePopulationSubmit(e);
                 }}
+                autoComplete="off"
                 className="space-y-4 text-sm"
               >
                   {/* Nome Completo (se Cadastro) */}
@@ -490,6 +491,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                         onBlur={() => setFocusedField(null)}
                         onChange={(e) => setUserName(e.target.value)}
                         required={isRegistering}
+                        autoComplete="off"
                         className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-black outline-none pt-2 pb-1 pr-8 text-base text-black transition-colors duration-300 peer"
                       />
                       <label
@@ -518,6 +520,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                           setUserCity(clean);
                           if (onCityChange) onCityChange(clean);
                         }}
+                        autoComplete="off"
                         className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-black outline-none pt-2 pb-1 pr-8 text-base text-black transition-colors duration-300 peer"
                       />
                       <label
@@ -542,6 +545,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       onBlur={() => setFocusedField(null)}
                       onChange={(e) => setEmailOrPhone(e.target.value)}
                       required
+                      autoComplete="username"
                       className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-black outline-none pt-2 pb-1 pr-8 text-base text-black transition-colors duration-300 peer"
                     />
                     <label
@@ -565,6 +569,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       onBlur={() => setFocusedField(null)}
                       onChange={(e) => setUserPassword(e.target.value)}
                       required
+                      autoComplete="new-password"
                       className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-black outline-none pt-2 pb-1 pr-10 text-base text-black transition-colors duration-300 peer"
                     />
                     <label

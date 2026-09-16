@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Place, ActiveTab, ViewMode, User, ActiveSection, JobOffer } from './types';
 import { INITIAL_PLACES } from './data/initialPlaces';
-import { INITIAL_JOBS } from './data/initialJobs';
 import {
   subscribePlaces,
   subscribeJobs,
@@ -11,7 +10,6 @@ import {
   seedInitialPlacesInFirestore,
   saveJobToFirestore,
   deleteJobFromFirestore,
-  seedInitialJobsInFirestore,
   subscribeAuthState,
   logoutFirebase,
   saveUserToFirestore,
@@ -75,7 +73,6 @@ export default function App() {
   const STORAGE_KEY_CITY = 'guiacidade_cidade_v1';
   const STORAGE_KEY_USER = 'guiacidade_usuario_v1';
   const STORAGE_KEY_JOBS = 'guiacidade_vagas_v1';
-  const STORAGE_KEY_DELETED_JOBS = 'guiacidade_vagas_deletadas_v1';
   const STORAGE_KEY_DARK = 'guiacidade_dark_mode_v1';
 
   // Dark Mode State (inicia como falso e alterna dinamicamente)
@@ -129,37 +126,22 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_KEY_PLACES);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
-    return INITIAL_PLACES;
+    return [];
   });
-
-  // Helper to read deleted job IDs
-  const getDeletedJobIds = (): Set<string> => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_DELETED_JOBS);
-      if (saved) {
-        const arr = JSON.parse(saved);
-        if (Array.isArray(arr)) return new Set(arr);
-      }
-    } catch {}
-    return new Set();
-  };
 
   // Jobs State
   const [jobs, setJobs] = useState<JobOffer[]>(() => {
-    const deletedIds = getDeletedJobIds();
     try {
       const saved = localStorage.getItem(STORAGE_KEY_JOBS);
-      if (saved !== null) {
+      if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed.filter((j: JobOffer) => !deletedIds.has(j.id));
-        }
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
-    return INITIAL_JOBS.filter((j) => !deletedIds.has(j.id));
+    return [];
   });
 
   // Sync Jobs to LocalStorage
@@ -306,69 +288,19 @@ export default function App() {
     let unsubJobs: (() => void) | undefined;
 
     unsubPlaces = subscribePlaces((remotePlaces) => {
-      if (remotePlaces && remotePlaces.length > 0) {
-        setPlaces((prevLocal) => {
-          const map = new Map<string, Place>();
-          // Set remote places
-          remotePlaces.forEach((p) => map.set(p.id, p));
-          // Merge local places if missing remotely (ensures no local additions are lost if DB was recreated)
-          prevLocal.forEach((p) => {
-            if (!map.has(p.id)) {
-              map.set(p.id, p);
-              savePlaceToFirestore(p);
-            }
-          });
-          const merged = Array.from(map.values());
-          try {
-            localStorage.setItem(STORAGE_KEY_PLACES, JSON.stringify(merged));
-          } catch (e) {}
-          return merged;
-        });
-      } else {
-        // If remote collection is empty, seed Firestore with existing local places or initial demo places
-        setPlaces((prevLocal) => {
-          const placesToSave = prevLocal.length > 0 ? prevLocal : INITIAL_PLACES;
-          seedInitialPlacesInFirestore(placesToSave);
-          return placesToSave;
-        });
-      }
+      const list = remotePlaces || [];
+      setPlaces(list);
+      try {
+        localStorage.setItem(STORAGE_KEY_PLACES, JSON.stringify(list));
+      } catch (e) {}
     });
 
     unsubJobs = subscribeJobs((remoteJobs) => {
-      const deletedIds = getDeletedJobIds();
-      if (remoteJobs && remoteJobs.length > 0) {
-        const validRemoteJobs = remoteJobs.filter((j) => !deletedIds.has(j.id));
-        // Se o banco remoto ainda tiver a vaga excluída, aciona a exclusão no Firestore novamente
-        remoteJobs.forEach((j) => {
-          if (deletedIds.has(j.id)) {
-            deleteJobFromFirestore(j.id);
-          }
-        });
-        setJobs(validRemoteJobs);
-        try {
-          localStorage.setItem(STORAGE_KEY_JOBS, JSON.stringify(validRemoteJobs));
-          localStorage.setItem('jobs_seeded', 'true');
-        } catch (e) {}
-      } else {
-        const isSeeded = localStorage.getItem('jobs_seeded') === 'true';
-        if (isSeeded) {
-          // Se já foi inicializado anteriormente, coleção remota vazia significa que todas as vagas foram excluídas
-          setJobs([]);
-          try {
-            localStorage.setItem(STORAGE_KEY_JOBS, JSON.stringify([]));
-          } catch (e) {}
-        } else {
-          const initialValid = INITIAL_JOBS.filter((j) => !deletedIds.has(j.id));
-          setJobs(initialValid);
-          if (initialValid.length > 0) {
-            seedInitialJobsInFirestore(initialValid);
-          }
-          try {
-            localStorage.setItem(STORAGE_KEY_JOBS, JSON.stringify(initialValid));
-            localStorage.setItem('jobs_seeded', 'true');
-          } catch (e) {}
-        }
-      }
+      const list = remoteJobs || [];
+      setJobs(list);
+      try {
+        localStorage.setItem(STORAGE_KEY_JOBS, JSON.stringify(list));
+      } catch (e) {}
     });
 
     return () => {
@@ -425,7 +357,13 @@ export default function App() {
   };
 
   const handleDeletePlace = (id: string) => {
-    setPlaces((prev) => prev.filter((p) => p.id !== id));
+    setPlaces((prev) => {
+      const updated = prev.filter((p) => p.id !== id);
+      try {
+        localStorage.setItem(STORAGE_KEY_PLACES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     setFavorites((prev) => prev.filter((favId) => favId !== id));
     deletePlaceFromFirestore(id);
     if (selectedPlace && selectedPlace.id === id) {
@@ -441,27 +379,18 @@ export default function App() {
       createdAt: new Date().toISOString(),
       ativa: true,
     };
-    try {
-      const deletedIds = getDeletedJobIds();
-      if (deletedIds.has(newId)) {
-        deletedIds.delete(newId);
-        localStorage.setItem(STORAGE_KEY_DELETED_JOBS, JSON.stringify(Array.from(deletedIds)));
-      }
-    } catch (e) {}
 
-    setJobs((prev) => [newJob, ...prev]);
+    setJobs((prev) => {
+      const updated = [newJob, ...prev];
+      try {
+        localStorage.setItem(STORAGE_KEY_JOBS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     saveJobToFirestore(newJob);
   };
 
   const handleDeleteJob = (id: string) => {
-    // 1. Salvar persistentemente a lista de IDs excluídos
-    try {
-      const deletedIds = getDeletedJobIds();
-      deletedIds.add(id);
-      localStorage.setItem(STORAGE_KEY_DELETED_JOBS, JSON.stringify(Array.from(deletedIds)));
-    } catch (e) {}
-
-    // 2. Atualizar estado local imediatamente
     setJobs((prev) => {
       const updated = prev.filter((j) => j.id !== id);
       try {
@@ -470,10 +399,8 @@ export default function App() {
       return updated;
     });
 
-    // 3. Excluir do Firestore
     deleteJobFromFirestore(id);
 
-    // 4. Fechar modal se a vaga estiver aberta
     if (selectedJob && selectedJob.id === id) {
       setSelectedJob(null);
     }

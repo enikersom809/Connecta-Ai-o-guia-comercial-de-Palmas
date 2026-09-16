@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Megaphone, MapPin, Image as ImageIcon } from 'lucide-react';
 import { Place } from '../types';
 import { dicionarioCategorias } from '../App';
-import { INITIAL_PLACES } from '../data/initialPlaces';
 
 interface FeaturedCarouselProps {
   places: Place[];
@@ -13,12 +12,9 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
   places,
   onSelectPlace,
 }) => {
-  // Garantir que INITIAL_PLACES seja usado se places vier vazio
-  const allPlaces = places && places.length > 0 ? places : INITIAL_PLACES;
-
-  // Filtra locais premium, permanentes, em destaque ou apenasBanner
+  // Filtra apenas locais premium, permanentes, em destaque ou apenasBanner
   const hoje = new Date().toISOString().split('T')[0];
-  const featuredPlaces = allPlaces.filter((place) => {
+  const featuredPlaces = (places || []).filter((place) => {
     const isDestaque = Boolean(
       place.premium || place.permanente || place.featured || place.apenasBanner
     );
@@ -27,7 +23,12 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
     return true;
   });
 
-  const activePlaces = featuredPlaces.length > 0 ? featuredPlaces : allPlaces.slice(0, 6);
+  // Se não houver nenhum banner principal cadastrado, não exibe o carrossel
+  if (!featuredPlaces || featuredPlaces.length === 0) {
+    return null;
+  }
+
+  const activePlaces = featuredPlaces;
 
   // Helper para resolver URL da imagem com fallback
   const getSlideImageUrl = (item: Place) => {
